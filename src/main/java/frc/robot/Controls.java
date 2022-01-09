@@ -5,13 +5,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.HIDType;
-//import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Controls {
-
-    private final boolean useJoystick = true;
-    
     //Singleton Method to insure that there is ever only one instance of Controls
     private static Controls instance = null;
 
@@ -28,8 +24,7 @@ public class Controls {
      */
     private enum ControllerIDs {
         JOYSTICK(1),
-        XBOX_MANIP_CONTROLLER(0),
-        LOGITECH_DRIVE_CONTROLLER(1);
+        XBOXCONTROLLER(0);
         
         private int id;
 
@@ -48,76 +43,27 @@ public class Controls {
     
     // XboxController Object Declaration
     private XboxController xboxController;
-    private XboxController driveController;
-
-    private boolean fieldDrive = false;
 
     private Controls() {
         //Instance Creation
-        if (useJoystick) {
-            joystick = new Joystick(ControllerIDs.JOYSTICK.getId());
-
-        } else {
-            driveController = new XboxController(ControllerIDs.LOGITECH_DRIVE_CONTROLLER.getId());
-
-        }
-        xboxController = new XboxController(ControllerIDs.XBOX_MANIP_CONTROLLER.getId());
+        joystick        = new Joystick(ControllerIDs.JOYSTICK.getId());
+        xboxController  = new XboxController(ControllerIDs.XBOXCONTROLLER.getId());
     }
 
     /**
      * JOYSTICK METHODS
      */
-
-
-    /************************************************ */
-    public double getX() {
-        if (useJoystick) {
-            return joystick.getX();
-        }
-        else {
-            return driveController.getLeftX();
-        }
-    }
-
-    public double getY() {
-        if (useJoystick) {
-            return joystick.getY();
-        }
-        else {
-            return driveController.getLeftY();
-        }
-    }
-
-    public double getZ() {
-        if (useJoystick) {
-            return joystick.getZ();
-        }
-        else {
-            return driveController.getRightX();
-        }
-    }
-
-
-    private boolean getShooterEnable() {
-        if (useJoystick) {
-            return joystick.getTrigger();
-        }
-        else {
-            return (driveController.getRightTriggerAxis() > 0.1);
-        }
-    }
-
     
      /**
      * 0 degrees is forward on the Joystick
-     * this method returns values from -180 to +180
+     * <p>This method returns values from -180 to +180
      * @return driveAngle
      */
     public double getDriveAngle() {
         double deadZone = 0.1;
 
-        double x = getX();
-        double y = getY();
+        double x = joystick.getX();
+        double y = joystick.getY() * -1;
         
         double rad = Math.atan2(x, y);
         double deg = Math.toDegrees(rad);
@@ -142,8 +88,9 @@ public class Controls {
      * @return rotatePower
      */
     public double getRotatePower() {
-        double deadZone = 0.3;
-        double power = getZ();
+        double deadZone = 0.2;
+        double powerhalfed;
+        double power = joystick.getZ();
 
         if ((power < deadZone) && (power > (deadZone * -1))) {
             //If within the deadzone, don't do anything
@@ -151,10 +98,9 @@ public class Controls {
         }
         else {
             //Halves the power because the rotate is SUPER sensitive
-            power = Math.pow(power, 3.0); 
-            power = MathUtil.clamp(power, -.5, .5);
+            powerhalfed = power / 2; 
             
-            return power;
+            return powerhalfed;
         }        
     }
 
@@ -163,9 +109,9 @@ public class Controls {
      * @return drivePower
      */
     public double getDrivePower() {
-        double x = getX();
-        double y = getY() * -1;
-        //double powerMultiplier = powerMultiplier();
+        double x = joystick.getX();
+        double y = joystick.getY() * -1;
+        double powerMultiplier = powerMultiplier();
         double drivePower;
         double hyp = Math.sqrt(x*x + y*y);
         double hypClamp;
@@ -175,7 +121,7 @@ public class Controls {
         //hypClamp = hyp / Math.sqrt(2);
 
         //This makes the throttle actually work, with all the way at the botom being zero throttle
-        drivePower = hypClamp; //* powerMultiplier;
+        drivePower = hypClamp * powerMultiplier;
         
         return drivePower;
     }
@@ -185,7 +131,7 @@ public class Controls {
      * @return driveX
      */
     public double getDriveX() {
-        double power = getX();
+        double power = joystick.getX();
         double deadZone = 0.1;
 
         if ((power < deadZone) && (power > (deadZone * -1))) {
@@ -203,7 +149,7 @@ public class Controls {
      * @return driveY
      */
     public double getDriveY() {
-        double power = getY() * -1;
+        double power = joystick.getY() * -1;
         double deadZone = 0.1;
 
         if ((power < deadZone) && (power > (deadZone * -1))) {
@@ -216,7 +162,28 @@ public class Controls {
         }        
     }
 
-    
+    /**
+     * Joystick button 5
+     * @return Whether or not field oriented drive should be activated
+     */
+    public boolean toggleFieldDrive() {
+        boolean fieldDrive;
+        fieldDrive = joystick.getRawButtonPressed(5);
+
+        return fieldDrive;
+    }
+
+    /**
+     * Joystick button ???
+     * @return Whether or not the limelight should target
+     */
+    public boolean enableTargetLock() {
+        boolean isPressed;
+        isPressed = joystick.getRawButtonPressed(11); // This needs to become an actual button sonner or later
+        
+        return isPressed;
+    }
+
 
     /****************************************************************************************** 
     *
@@ -226,27 +193,18 @@ public class Controls {
     ******************************************************************************************/
     public Shooter.ShootLocation getShooterLocation() {
         //Variables
-        boolean enableShooter = getShooterEnable();
-        boolean buttonTrench;
-        boolean buttonLayup;
+        boolean enableShooter = enableShooter();
+        boolean buttonFour    = joystick.getRawButton(4);
+        boolean buttonTwo     = joystick.getRawButton(2);
 
-        if (useJoystick) {
-            buttonTrench = joystick.getRawButton(4);
-            buttonLayup  = joystick.getRawButton(2);    
-        }
-        else {
-            buttonTrench = driveController.getYButton();
-            buttonLayup  = driveController.getAButton();
-        }
-       
         //Shooter on
         if (enableShooter == true) {
             //Button 4 = trench shot
-            if (buttonTrench == true) {
+            if (buttonFour == true) {
                 return Shooter.ShootLocation.TRENCH;
             }
             //Button 2 = hail mary
-            else if (buttonLayup == true) {
+            else if (buttonTwo == true) {
                 return Shooter.ShootLocation.LAY_UP;
             }
             //No buttons = ten foot
@@ -259,12 +217,33 @@ public class Controls {
         }
     }
 
+    /**
+     * Joystick trigger
+     * @return Whether or not the shooter should fire
+     */
+    public boolean enableShooter() {
+        boolean isPressed;
+        isPressed = joystick.getTrigger();
+        
+        return isPressed;
+    }
+
+    /**
+     * Joystick Circle Pad
+     * <p>0 is the top, 90 is right, 180 is back, 270 is left, and -1 is nothing
+     * @return The value of the circle pad on top
+     */
+    public int joystickCirclePadPosition() {
+        int circlePadPosition;
+        circlePadPosition = joystick.getPOV();
+
+        return circlePadPosition;
+    }
 
     /**
      * Returns the decimal value of the throttle, with all the way at the bottom being 0
      * @return throttleDecimal 0 to 2
      */
-    /*
     private double powerMultiplier() {
         //Variables
         double throttle = joystick.getThrottle() * -1; //Forward on the throttle is -1, but we want it to be +1
@@ -277,7 +256,7 @@ public class Controls {
         throttleDecimal = posThrottle / 2;
 
         return throttleDecimal;
-    }*/
+    }
 
 
     /**
@@ -285,7 +264,7 @@ public class Controls {
      */
     /**
      * Start Button Pressed
-     * WHETER TO KILL ALL ACTIVE AUTO PROGRAMS!
+     * <p>WHETHER TO KILL ALL ACTIVE AUTO PROGRAMS!
      * @return startButtonPressed
      */
     public boolean autoKill() {
@@ -312,7 +291,7 @@ public class Controls {
 
     /**
      * Button Y
-     * Deploys / Retracts the Grabber
+     * <p>Deploys / Retracts the Grabber
      * @return buttonYPressed
      */
     public boolean grabberDeployRetract() {
@@ -321,8 +300,8 @@ public class Controls {
 
     /**
      * DPad Inputs
-     * Upper left, Up, and Upper right on the DPad returns forward
-     * Lower left, Down, and Lower right on the DPad returns reverse
+     * <p>Upper left, Up, and Upper right on the DPad returns forward
+     * <p>Lower left, Down, and Lower right on the DPad returns reverse
      * @return The direction the grabber should move
      */
     public Grabber.GrabberDirection getGrabberDir() {
@@ -373,7 +352,10 @@ public class Controls {
         }
     }
 
-    //Left trigger reverses feeder
+    /**
+     * Left trigger
+     * @return power
+     */
     public double reverseFeederPower() {
         double power = xboxController.getLeftTriggerAxis();
 
@@ -404,18 +386,6 @@ public class Controls {
         else {
             return Shooter.BallFeederDirection.OFF;
         }
-    }
-   
-    public boolean getFieldDrive() {
-        if (joystick.getRawButtonPressed(7)) {
-            fieldDrive = false;
-            System.out.println("Field drive disabled");
-        }
-        if (joystick.getRawButtonPressed(8)) {
-            fieldDrive = true;
-            System.out.println("Field drive enabled");
-        }
-        return fieldDrive;
     }
 
 } // End of the Controls class

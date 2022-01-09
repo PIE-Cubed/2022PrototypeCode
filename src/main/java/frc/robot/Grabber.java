@@ -57,8 +57,8 @@ public class Grabber {
         grabberMotor.set(0.0);
 
         //Grabber Position Init
-        //grabberPiston = new DoubleSolenoid(PCM_CAN_ID, DEPLOY_ID, RETRACT_ID);
-        //grabberPiston.set(Value.kReverse);
+        grabberPiston = new DoubleSolenoid(PCM_CAN_ID, DEPLOY_ID, RETRACT_ID);
+        grabberPiston.set(Value.kReverse);
         grabberState = GrabberState.RETRACT;
     }
 

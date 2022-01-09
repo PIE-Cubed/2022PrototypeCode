@@ -43,38 +43,6 @@ public class Auto {
 		shootStep = 1;
 	}
 
-	public int testAuto() {
-		int status = Robot.CONT;
-
-		if (firstTime == true) {
-			firstTime = false;
-			step = 1;
-		}
-
-		switch (step) {
-			// Starts Auto Program
-			case 1:
-				status = drive.autoRotate(180);
-				break;
-			case 2:
-				status = drive.autoAdjustWheels(0);
-				break;
-			case 3:
-				status = drive.autoCrabDrive(5, 0, 0.5);
-				break;
-			
-			default:
-				step = 1;
-				firstTime = true;			
-				return Robot.DONE;
-		}
-
-		if (status == Robot.DONE) {
-			step++;
-		}
-
-		return Robot.CONT;
-	}
 
 	/****************************************************************************************** 
     *
@@ -111,7 +79,7 @@ public class Auto {
     ******************************************************************************************/
 	public int rightAuto(int delay) {
 		int status = Robot.CONT;
-		//long delayMsec = delay * 1000;
+		long delayMsec = delay * 1000;
 
 		if (firstTime == true) {
 			firstTime = false;
@@ -121,34 +89,20 @@ public class Auto {
 		switch (step) {
 			// Starts Auto Program
 			case 1:
-				status = drive.autoRotate(-20);
-				break;
-			case 2:
-				status = shootBall(Shooter.ShootLocation.TEN_FOOT);
-				break;
-			case 3:
-				status = drive.autoRotate(180);
-				break;
-			case 4:
-				status = drive.autoAdjustWheels(0);
-				break;
-			case 5:
-				status = drive.autoCrabDrive(9, 0, 0.6);
-				break;
-			/*case 1:
 				shooter.manualHoodMotorControl(Shooter.ShootLocation.TEN_FOOT);
 				status = delay(delayMsec);
 				break;
-			/*case 2:
-				status = shootBall(Shooter.ShootLocation.TEN_FOOT);
-				break;
 			case 2:
-				status = drive.autoRotate(-180);
+				shooter.manualHoodMotorControl(Shooter.ShootLocation.TEN_FOOT);
+				status = drive.autoRotate(-25.0);
 				break;
 			case 3:
-				status = drive.autoAdjustWheels(0);
+				status = shootBall(Shooter.ShootLocation.TEN_FOOT);
 				break;
 			case 4:
+				status = drive.autoRotate(-180);
+				break;
+			case 5:
 				status = drive.autoCrabDrive(3, 0, 0.4);
 				break;
 				/*

@@ -10,7 +10,20 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.SPI;
 
 public class Drive {
+    //Singleton Method to insure that there is ever only one instance of Controls
+    private static Drive instance = null;
+
+    public static synchronized Drive getInstance() {
+        if (instance == null) {
+            instance = new Drive();
+        }
+
+        return instance;
+    }
+
     //Object creation
+    Controls controls;
+    LedLights led;
     NetworkTable limelightEntries = NetworkTableInstance.getDefault().getTable("limelight");
 
     //NAVX
@@ -25,7 +38,7 @@ public class Drive {
     private static final double kLimeLightToleranceDegrees = 1.0f;
     
     // Turn Controller
-	private static final double kP = 0.01; //0.02
+	private static final double kP = 0.02;
 	private static final double kI = 0.00;
     private static final double kD = 0.00;
     
@@ -35,7 +48,7 @@ public class Drive {
     private static final double acdD = 0;
 
 	//Target Controller
-	private static final double tP = 0.01; //0.033
+	private static final double tP = 0.033; //0.03
 	private static final double tI = 0.00;
     private static final double tD = 0.00;
 
@@ -49,7 +62,7 @@ public class Drive {
     
     //CONSTANTS
     private final int    FAIL_DELAY   = 5;
-    private final double ticksPerFoot = 6; //5.75
+    private final double ticksPerFoot = 5.75;
 
 
 	//Limelight Variables
@@ -66,6 +79,15 @@ public class Drive {
 	public static final int     LIMELIGHT_ON  = 3;
     public static final int     LIMELIGHT_OFF = 1;
 
+    //Limelight distance calc
+    private static final double CameraMountingAngle = 22.0;	                               // 25.6 degrees, 22.0
+	private static final double CameraHeightFeet 	= 26.5 / 12;	                       // 16.5 inches
+	private static final double TargetHeightFt 	    = 7 + (7.5 / 12.0) ;	               // 8ft 2.25 inches
+	private static       double mountingRadians     = Math.toRadians(CameraMountingAngle); // a1, converted to radians
+
+	// find result of h2 - h1, or Δh
+	private static double DifferenceInHeight = TargetHeightFt - CameraHeightFeet;
+    
         
     /**
      * Enumerators
@@ -90,26 +112,27 @@ public class Drive {
 
     // An enum containing each wheel's properties including: drive and rotate motor IDs, drive motor types, and rotate sensor IDs 
     public enum WheelProperties {
-        FRONT_RIGHT_WHEEL(15, // DRIVE MOTOR ID
-                          1, // ROTATE MOTOR ID
-                          1, // ROTATE SENSOR ID
+        //Need offset var
+        FRONT_RIGHT_WHEEL(15,      // DRIVE MOTOR ID
+                          1,       // ROTATE MOTOR ID
+                          1,       // ROTATE SENSOR ID
                           (-1 * rotateMotorAngleRad), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
                           249.65), //Offset
-        FRONT_LEFT_WHEEL(12, // DRIVE MOTOR ID
-                         2, // ROTATE MOTOR ID
-                         2, // ROTATE SENSOR ID
+        FRONT_LEFT_WHEEL(12,       // DRIVE MOTOR ID
+                         2,        // ROTATE MOTOR ID
+                         2,        // ROTATE SENSOR ID
                          (-1 * rotateMotorAngleRad - (Math.PI/2)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
-                         306.75), //Offset
-        REAR_RIGHT_WHEEL(14, // DRIVE MOTOR ID
-                         4, // ROTATE MOTOR ID
-                         0, // ROTATE SENSOR ID
+                         306.75),  //Offset
+        REAR_RIGHT_WHEEL(14,       // DRIVE MOTOR ID
+                         4,        // ROTATE MOTOR ID
+                         0,        // ROTATE SENSOR ID
                          (-1 * rotateMotorAngleRad + (Math.PI/2)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
-                         114.6), //Offset
-        REAR_LEFT_WHEEL(13, // DRIVE MOTOR ID
-                        3, // ROTATE MOTOR ID
-                        3, // ROTATE SENSOR ID
+                         114.6),   //Offset
+        REAR_LEFT_WHEEL(13,        // DRIVE MOTOR ID
+                        3,         // ROTATE MOTOR ID
+                        3,         // ROTATE SENSOR ID
                         (-1 * rotateMotorAngleRad + (Math.PI)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
-                        257.9); //Offset
+                        257.9);    //Offset
 
         private int driveMotorId;
         private int rotateMotorId;
@@ -143,6 +166,7 @@ public class Drive {
         }
     }
 
+    // Creates an instance of the Wheel using one of the most unnecessarily complicated constructors that I have ever seen 
     private Wheel frontRightWheel = new Wheel(WheelProperties.FRONT_RIGHT_WHEEL.getDriveMotorId(),
                                               WheelProperties.FRONT_RIGHT_WHEEL.getRotateMotorId(), 
                                               WheelProperties.FRONT_RIGHT_WHEEL.getRotateSensorId(),
@@ -171,14 +195,16 @@ public class Drive {
      */
     private static final double robotLength = 30.0;
     private static final double robotWidth  = 18.0;
+
+    // Note: this field is static because it must be. It is referenced in the enum, which is in and of itself, static.
     private static final double rotateMotorAngleRad = Math.atan2(robotLength, robotWidth);
     private static final double rotateMotorAngleDeg = Math.toDegrees(rotateMotorAngleRad);
  
     // These numbers were selected to make the angles between -180 and +180
-    private static final double rotateRightFrontMotorAngle = -1 * rotateMotorAngleDeg; //-1 * rotateMotorAngleDeg;
-    private static final double rotateLeftFrontMotorAngle = -180 + rotateMotorAngleDeg; //rotateRightFrontMotorAngle - 90;
-    private static final double rotateRightRearMotorAngle = rotateMotorAngleDeg; //rotateRightFrontMotorAngle + 90;
-    private static final double rotateLeftRearMotorAngle =  180 -rotateMotorAngleDeg;       //rotateRightFrontMotorAngle + 180;
+    private static final double rotateRightFrontMotorAngle = -1 * rotateMotorAngleDeg;
+    private static final double rotateLeftFrontMotorAngle = rotateRightFrontMotorAngle - 90;
+    private static final double rotateRightRearMotorAngle = rotateRightFrontMotorAngle + 90;
+    private static final double rotateLeftRearMotorAngle =  rotateRightFrontMotorAngle + 180;
 
 
     /****************************************************************************************** 
@@ -211,13 +237,16 @@ public class Drive {
         }
     }
 
-    
     /****************************************************************************************** 
     *
     *    Drive constructor
     * 
     ******************************************************************************************/
-    public Drive() {
+    private Drive() {
+
+        //Instance creation
+        led = LedLights.getInstance();
+        
 
         //NavX
         try {
@@ -225,7 +254,7 @@ public class Drive {
         } catch (RuntimeException ex) {
             System.out.println("Error Instantiating navX MXP: " + ex.getMessage());
         }
-
+    
         ahrs.reset();
     
         while (ahrs.isConnected() == false) {
@@ -239,6 +268,8 @@ public class Drive {
         System.out.println("navx Ready");
     
         ahrs.zeroYaw();
+
+
 
         //PID Controllers
         rotateController = new PIDController(kP, kI, kD);
@@ -273,7 +304,7 @@ public class Drive {
     *    For each wheel, the inputted X, Y, Z, and individual angle for rotation are used to calculate the angle and power 
     * 
     ******************************************************************************************/
-    private PowerAndAngle calcSwerve(double crabX, double crabY, double rotatePower, double rotateAngle, boolean fieldDriveEnabled){
+    public PowerAndAngle calcSwerve(double crabX, double crabY, double rotatePower, double rotateAngle){
         double swerveX;
         double swerveY;
         double swervePower;
@@ -281,15 +312,6 @@ public class Drive {
         double rotateX;
         double rotateY;
 
-        //If field drive is active then the crab drive values are shifted based on gyro reading
-        if (fieldDriveEnabled) {
-            double crabPower = Math.sqrt((crabX * crabX) + (crabY * crabY));
-            double crabAngle = Math.toDegrees(Math.atan2(crabX, crabY));
-            crabAngle -= ahrs.getYaw();
-
-            crabX = Math.sin(Math.toRadians(crabAngle)) * crabPower;
-            crabY = Math.cos(Math.toRadians(crabAngle)) * crabPower;
-        }
        
         /**
          * The incomming rotate angle will cause the robot to rotate counter-clockwise
@@ -306,13 +328,6 @@ public class Drive {
         swervePower = Math.sqrt((swerveX * swerveX) + (swerveY * swerveY));
         swerveAngle = Math.toDegrees(Math.atan2(swerveX, swerveY));
 
-        //If we are rotating CCW, and we are not crab driving, then the robot will flip the wheel angles and powers
-        //This keeps the wheels in the same position when turning both ways, making small rotations easier
-        if ((rotatePower < 0) && (crabX == 0 && crabY == 0)) {
-            swervePower *= -1;
-            swerveAngle += 180;
-        }
-
         PowerAndAngle swerveNums = new PowerAndAngle(swervePower, swerveAngle);
 
         return swerveNums;
@@ -326,19 +341,19 @@ public class Drive {
     *    Takes X, Y, and Z and rotates each wheel to proper angle and sets correct power
     * 
     ******************************************************************************************/
-    public void teleopSwerve(double driveX, double driveY, double rotatePower, boolean fieldDriveEnabled) {
+    public void teleopSwerve(double driveX, double driveY, double rotatePower) {
         PowerAndAngle coor;
 
-        coor = calcSwerve(driveX, driveY, rotatePower, rotateRightFrontMotorAngle, fieldDriveEnabled);
+        coor = calcSwerve(driveX, driveY, rotatePower, rotateRightFrontMotorAngle);
         frontRightWheel.rotateAndDrive(coor.getAngle(), coor.getPower());
 
-        coor = calcSwerve(driveX, driveY, rotatePower, rotateLeftFrontMotorAngle, fieldDriveEnabled);
+        coor = calcSwerve(driveX, driveY, rotatePower, rotateLeftFrontMotorAngle);
         frontLeftWheel.rotateAndDrive(coor.getAngle(), coor.getPower());
 
-        coor = calcSwerve(driveX, driveY, rotatePower, rotateRightRearMotorAngle, fieldDriveEnabled);
+        coor = calcSwerve(driveX, driveY, rotatePower, rotateRightRearMotorAngle);
         rearRightWheel.rotateAndDrive(coor.getAngle(), coor.getPower());
 
-        coor = calcSwerve(driveX, driveY, rotatePower, rotateLeftRearMotorAngle, fieldDriveEnabled);
+        coor = calcSwerve(driveX, driveY, rotatePower, rotateLeftRearMotorAngle);
         rearLeftWheel.rotateAndDrive(coor.getAngle(), coor.getPower());
     }
 
@@ -387,8 +402,17 @@ public class Drive {
     * 
     ******************************************************************************************/
     public int autoCrabDrive(double distance, double targetHeading, double power) {
+        double orientationError;
+
+        double x = power * Math.sin(Math.toRadians(targetHeading));
+        double y = power * Math.cos(Math.toRadians(targetHeading));
 
         double encoderCurrent = getAverageEncoder(); //Average of 4 wheels
+
+        if (distance < 0){
+            System.out.println("Error from autoCrabDrive(), negative distance not allowed");
+            return Robot.DONE;
+        }
 
         //First time through initializes target values
         if (firstTime == true) {
@@ -397,32 +421,14 @@ public class Drive {
             encoderTarget = encoderCurrent + (ticksPerFoot * distance);
         }
 
-        //Halfs speed within 3 feet of target, if total distance is at least 5 feet
-        if ((encoderCurrent + (3 * ticksPerFoot) > encoderTarget) && distance > 5) {
-            power *= 0.5;
-        }
-
-        double orientationError;
-
-        double x = power * Math.sin(Math.toRadians(targetHeading));
-        double y = power * Math.cos(Math.toRadians(targetHeading));
-
-
-        if (distance < 0){
-            System.out.println("Error from autoCrabDrive(), negative distance not allowed");
-            return Robot.DONE;
-        }
-
-        
-
         //Adjusts wheel angles
         orientationError = autoCrabDriveController.calculate(ahrs.getYaw(), targetOrientation); 
-        teleopSwerve(x, y, orientationError, false);
+        teleopSwerve(x, y, orientationError);
 
         //Checks if target distance has been reached, then ends function if so
         if (encoderCurrent >= encoderTarget) {
             firstTime = true;
-            //stopWheels();
+            stopWheels();
             rotateController.reset();
             return Robot.DONE;
         } 
@@ -476,9 +482,8 @@ public class Drive {
 		}
 
 		// Rotate
-        rotateError = rotateController.calculate(ahrs.getYaw(), degrees);
-        rotateError = MathUtil.clamp(rotateError, -0.5, 0.5);
-        System.out.println(rotateError + " " + ahrs.getYaw());
+		rotateError = rotateController.calculate(ahrs.getYaw(), degrees);
+        rotateError = MathUtil.clamp(rotateError, -0.75, 0.75);
 		teleopRotate(rotateError);
 
 		// CHECK: Routine Complete
@@ -505,47 +510,6 @@ public class Drive {
 
     /****************************************************************************************** 
     *
-    *    circle()
-    *    Moves robot around circle with given radius (radius is from center of circle to center of robot)
-    * 
-    ******************************************************************************************/
-    public void circle(double radiusFeet) {
-
-        double radius = radiusFeet*12;
-
-        //Finds angle of the radius to each wheel, used to find the angle the wheels need to go to
-        double innerAngle = Math.toDegrees(Math.atan2(robotWidth/2, radius - (robotLength/2)));
-        double outerAngle = Math.toDegrees(Math.atan2(robotWidth/2, radius + (robotLength/2)));
-
-        //The distance that each wheel is from the center of the circle is found with the pythagorean theorem
-        double innerDist = Math.pow(   Math.pow((robotWidth/2), 2) + Math.pow(radius - robotLength/2, 2),    0.5);
-        double outerDist = Math.pow(   Math.pow((robotWidth/2), 2) + Math.pow(radius + robotLength/2, 2),    0.5);
-
-        //The ratio between the inner and outer speeds is equal to the ratio of their distances
-        double outerSpeed = 0.25; //Sets basis for speed of turning
-        double innerSpeed = outerSpeed * (innerDist/outerDist);
-
-        frontLeftWheel.rotateAndDrive(innerAngle + 90, innerSpeed);
-        frontRightWheel.rotateAndDrive(-90 - innerAngle, -1*innerSpeed);
-
-        rearLeftWheel.rotateAndDrive(outerAngle + 90, outerSpeed);
-        rearRightWheel.rotateAndDrive(-90 - outerAngle, -1*outerSpeed);
-    }
-
-
-    /****************************************************************************************** 
-    *
-    *    spiral()
-    *    Robot moves forward while spinning around
-    * 
-    ******************************************************************************************/
-    public void spiral() {
-        teleopSwerve(0, 0.3, 0.3, true);
-    }
-
-
-    /****************************************************************************************** 
-    *
     *    autoAdjustWheels()
     *    Rotates wheels to desired angle
     * 
@@ -556,7 +520,7 @@ public class Drive {
         if (rotateFirstTime == true) {
             rotateFirstTime = false;
             count = 0;
-            timeOut = currentMs + 500; //Makes the time out 2.5 seconds
+            timeOut = currentMs + 2500; //Makes the time out 2.5 seconds
         }
 
         if (currentMs > timeOut) {
@@ -569,10 +533,10 @@ public class Drive {
 		}
 
 		// Rotate
-        int FR = frontRightWheel.rotateAndDrive(degrees, 0);
-        int FL = frontLeftWheel.rotateAndDrive(degrees, 0);
-        int BR = rearRightWheel.rotateAndDrive(degrees, 0);
-        int BL = rearLeftWheel.rotateAndDrive(degrees, 0);
+        int FR = frontRightWheel.rotateAndDrive(rotateRightFrontMotorAngle, 0);
+        int FL = frontLeftWheel.rotateAndDrive(rotateLeftFrontMotorAngle, 0);
+        int BR = rearRightWheel.rotateAndDrive(rotateRightRearMotorAngle, 0);
+        int BL = rearLeftWheel.rotateAndDrive(rotateLeftRearMotorAngle, 0);
 
         //Checks if all wheels are at target angle
         if (FR == Robot.DONE && FL == Robot.DONE && BR == Robot.DONE && BL == Robot.DONE) {
@@ -696,7 +660,7 @@ public class Drive {
 		}
 
         // Rotate
-        // Need a -1 angle because limelight is slightly offset
+        // Needs a -1 angle because limelight is slightly offset
 		m_LimelightCalculatedPower = targetController.calculate(tx, -1.0);
         m_LimelightCalculatedPower = MathUtil.clamp(m_LimelightCalculatedPower, -0.50, 0.50);
 		teleopRotate(m_LimelightCalculatedPower * -1);
@@ -752,7 +716,7 @@ public class Drive {
         int status = 0;
 
         // Variables
-        Shooter.ShootLocation attemptedShot = Shooter.ShootLocation.TEN_FOOT; //.getShooterLocation(); can't use controls in drive
+        Shooter.ShootLocation attemptedShot = controls.getShooterLocation();
         Shooter.ShootLocation LAY_UP = Shooter.ShootLocation.LAY_UP;
         Shooter.ShootLocation TEN_FOOT = Shooter.ShootLocation.TEN_FOOT;
         Shooter.ShootLocation TRENCH = Shooter.ShootLocation.TRENCH;
@@ -791,6 +755,59 @@ public class Drive {
         return status;
     }
 
+    /** 
+     * tan(a1+a2) = (h2-h1) / d
+	 * D = (h2 - h1) / tan(a1 + a2).
+     * These equations, along with known numbers, helps find the distance from a target.
+	 */
+	public double getDistance() {
+	  // Vertical Offset From Crosshair To Target (-20.5 degrees to 20.5 degrees) [41 degree tolerance]
+	  double ty = limelightEntries.getEntry("ty").getDouble(0);
+		
+	  // a2, converted to radians
+	  double radiansToTarget = Math.toRadians(ty); 
+
+	  // find result of a1 + a2
+	  double angleInRadians = mountingRadians + radiansToTarget;
+
+	  // find the tangent of a1 + a2
+	  double tangentOfAngle = Math.tan(angleInRadians); 
+
+	  // Divide the two results ((h2 - h1) / tan(a1 + a2)) for the distance to target
+	  double distance = DifferenceInHeight / tangentOfAngle;
+
+	  // outputs the distance calculated
+	  return distance; 
+	}
+
+	/** 
+	 * a1 = arctan((h2 - h1) / d - tan(a2)). This equation, with a known distance input, helps find the 
+	 * mounted camera angle.
+	 */
+	public double getCameraMountingAngle(double measuredDistance) {
+	  // Vertical Offset From Crosshair To Target (-20.5 degrees to 20.5 degrees) [41 degree tolerance]
+	  double ty = limelightEntries.getEntry("ty").getDouble(0);
+
+	  // convert a2 to radians
+	  double radiansToTarget = Math.toRadians(ty);
+
+	  // find result of (h2 - h1) / d
+	  double heightOverDistance = DifferenceInHeight / measuredDistance;
+
+	  // find result of tan(a2)
+	  double tangentOfAngle = Math.tan(radiansToTarget);
+
+	  // (h2-h1)/d - tan(a2) subtract two results for the tangent of the two sides
+	  double TangentOfSides = heightOverDistance - tangentOfAngle; 
+
+	  // invert tangent operation to get the camera mounting angle in radians
+	  double newMountingRadians = Math.atan(TangentOfSides);
+
+	  // change result into degrees
+	  double cameraMountingAngle = Math.toDegrees(newMountingRadians);
+	  
+	  return cameraMountingAngle; // output result
+	}
 
 	/**
 	 * Change Limelight Modes

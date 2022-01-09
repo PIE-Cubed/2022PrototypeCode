@@ -12,15 +12,17 @@ public class Robot extends TimedRobot {
   public static final int CONT =  3;
 
   //OBJECT CREATION
-  private LedLights led;
-  private Auto      auto;
-  private Drive     drive;
-  private Controls  controls;
-  private Grabber   grabber;
-  private Shooter   shooter;
-  private Climber   climber;
+  private LedLights      led;
+  private Auto           auto;
+  private Drive          drive;
+  private Controls       controls;
+  private Grabber        grabber;
+  private Shooter        shooter;
+  private Climber        climber;
+  private ObjectTracking objTrack;
 
   //CONSTANTS
+  //private final int    LED_DELAY           = 15;
   private final double REVERSE_FEEDER_TIME = 0.25;
 
   //VARIABLES
@@ -29,6 +31,7 @@ public class Robot extends TimedRobot {
   private double  rotatePower;
   private double  driveX;
   private double  driveY;
+  private boolean fieldDriveState = false;
   private boolean hoodCalibrated  = false;
   private boolean reverseFeeder   = false;
 
@@ -46,10 +49,9 @@ public class Robot extends TimedRobot {
   }
   private ShooterState shooterState = ShooterState.SHOOTER_OFF_STATE;
 
-
   //Setting Up WheelMode for limelight
 	private Drive.WheelMode wheelMode;
-	private int targetingStatus;
+  private int targetingStatus;
 
 
   /**
@@ -73,6 +75,7 @@ public class Robot extends TimedRobot {
 	private int m_delaySelected;
   private final SendableChooser<String> m_delayChooser = new SendableChooser<>();
 
+
   /**
    * Constructor
    */
@@ -80,12 +83,16 @@ public class Robot extends TimedRobot {
     //Instance Creation
     led      = LedLights.getInstance();
     controls = Controls.getInstance();
-    drive    = new Drive();
+    drive    = Drive.getInstance();
     grabber  = new Grabber();
     shooter  = new Shooter();
     climber  = new Climber();
     auto     = new Auto(drive, grabber, shooter);
-    
+    objTrack = new ObjectTracking();
+
+    //Set Variables
+    //
+
     //Set Different Status Cues
     climberState  = Climber.ClimberState.ALL_ARMS_DOWN;
     wheelMode     = Drive.WheelMode.MANUAL;
@@ -284,37 +291,9 @@ public class Robot extends TimedRobot {
     if (controls.autoKill() == true) {
       autoStatus = Robot.FAIL;
     }
-  
-    drive.circle(3);
-
-    /*switch (step) {
-      case 1:
-        shooter.testHoodMotor(-0.03);
-        if (shooter.getHoodEncoder() < -13) {
-          shooter.disableHoodMotor();
-          autoStatus = DONE;
-        }
-        else {
-          autoStatus = CONT;
-        }
-        break;
-      case 2:
-        shooter.enableShooterFullPower();
-        break;
-      default:
-        step = 1;
-    }
-
-    if ( (autoStatus == Robot.DONE) || (autoStatus == Robot.FAIL) ) {
-      step++;
-    }*/
-  
-    //autoStatus = shooter.moveHoodFullForward();
-    //shooter.testHoodMotorEncoder();
     
-    /*double tempPower;
-    tempPower = SmartDashboard.getNumber("Input Power", 0.5);
-    shooter.enableShooter(tempPower);*/
+    //Uses NetworkTables to get the ball value
+    rotateToObject();
   }
 
 
@@ -332,7 +311,6 @@ public class Robot extends TimedRobot {
     driveY                 = controls.getDriveY();
     shootLocation          = controls.getShooterLocation();
     boolean killTargetLock = controls.autoKill();
-    boolean fieldDrive     = controls.getFieldDrive();
   
     //Only turns on targetLock mode if autoKill isn't being pressed
     if (killTargetLock == true) {
@@ -345,7 +323,7 @@ public class Robot extends TimedRobot {
 
       //If robot is out of deadzone, drive normally
       if ((Math.sqrt(driveX*driveX + driveY*driveY) > 0.01) || (Math.abs(rotatePower) > 0.01)) {
-        drive.teleopSwerve(driveX, driveY, rotatePower, fieldDrive);
+        drive.teleopSwerve(driveX, driveY, rotatePower);
       }
       else {
         //Robot is in dead zone
@@ -618,6 +596,33 @@ public class Robot extends TimedRobot {
       
       return;
     }
+  }
+
+  /****************************************************************************************** 
+  *
+  *    rotateToObject()
+  *    Targets the yellow balls using contor values
+  *    Can be changed to blob detection if need be, although it less reliable
+  * 
+  ******************************************************************************************/
+  public void rotateToObject() {
+    //In order to not cluter drive or robot, the math and movement for this method is handled in ObjectTracking.java
+    objTrack.faceBall();
+  }
+
+  /****************************************************************************************** 
+   *
+   *    fieldDrive()
+   *    returns if we are in field drive mode   
+   * 
+   ******************************************************************************************/
+   private boolean fieldDrive() {
+
+    if (controls.toggleFieldDrive() == true) {
+      fieldDriveState = !fieldDriveState; //Toggles fieldDriveState
+    }
+    
+    return fieldDriveState;
   }
 
 } // End of the Robot Class
