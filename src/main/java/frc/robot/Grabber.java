@@ -29,7 +29,7 @@ public class Grabber {
 
     //CONSTANTS
     private final double GRABBER_POWER = 1.0;  //-1.0
-    private PneumaticsModuleType PHEONIX_PCM = PneumaticsModuleType.CTREPCM;
+    private final PneumaticsModuleType PHEONIX_PCM = PneumaticsModuleType.CTREPCM;
 
     /**
      * Enumerater for Grabber State

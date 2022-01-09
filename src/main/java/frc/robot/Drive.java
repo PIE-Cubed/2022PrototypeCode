@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.SPI;
  * Start of class
  */
 public class Drive {
-    //Singleton Method to insure that there is ever only one instance of Controls
+    //Singleton Method to insure that there is ever only one instance of Drive
     private static Drive instance = null;
 
     public static synchronized Drive getInstance() {

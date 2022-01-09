@@ -27,7 +27,7 @@ public class Climber {
 
     // Constants
     private final int LIFTER_CURRENT_LIMIT      = 50;
-    private PneumaticsModuleType PHEONIX_PCM    = PneumaticsModuleType.CTREPCM;
+    private final PneumaticsModuleType PHEONIX_PCM = PneumaticsModuleType.CTREPCM;
     
     //Solenoid ID's
     private final int BOTTOM_MIDDLE_DEPLOY_ID   = 5;
