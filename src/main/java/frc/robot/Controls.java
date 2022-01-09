@@ -5,8 +5,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.HIDType;
-//import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Controls {
 
@@ -150,7 +149,7 @@ public class Controls {
             return 0;
         }
         else {
-            //Halves the power because the rotate is SUPER sensitive
+            //Cubes the power because the rotate is SUPER sensitive
             power = Math.pow(power, 3.0); 
             power = MathUtil.clamp(power, -.5, .5);
             

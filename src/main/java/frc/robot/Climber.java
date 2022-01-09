@@ -58,8 +58,8 @@ public class Climber {
         liftMotor.set( 0.0 );
 
         //Configure pistons
-        //pistonBottomMiddle = new DoubleSolenoid(BOTTOM_MIDDLE_DEPLOY_ID, BOTTOM_MIDDLE_RETRACT_ID);
-        //pistonTop          = new DoubleSolenoid(TOP_DEPLOY_ID, TOP_RETRACT_ID);
+        pistonBottomMiddle = new DoubleSolenoid(BOTTOM_MIDDLE_DEPLOY_ID, BOTTOM_MIDDLE_RETRACT_ID);
+        pistonTop          = new DoubleSolenoid(TOP_DEPLOY_ID, TOP_RETRACT_ID);
 
         //Retract all pistons
         climberDown();

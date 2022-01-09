@@ -90,25 +90,22 @@ public class Drive {
 
     // An enum containing each wheel's properties including: drive and rotate motor IDs, drive motor types, and rotate sensor IDs 
     public enum WheelProperties {
+        //Creates WheelProperties objects using constructor below
         FRONT_RIGHT_WHEEL(15, // DRIVE MOTOR ID
                           1, // ROTATE MOTOR ID
                           1, // ROTATE SENSOR ID
-                          (-1 * rotateMotorAngleRad), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
                           249.65), //Offset
         FRONT_LEFT_WHEEL(12, // DRIVE MOTOR ID
                          2, // ROTATE MOTOR ID
                          2, // ROTATE SENSOR ID
-                         (-1 * rotateMotorAngleRad - (Math.PI/2)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
                          306.75), //Offset
         REAR_RIGHT_WHEEL(14, // DRIVE MOTOR ID
                          4, // ROTATE MOTOR ID
                          0, // ROTATE SENSOR ID
-                         (-1 * rotateMotorAngleRad + (Math.PI/2)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
                          114.6), //Offset
         REAR_LEFT_WHEEL(13, // DRIVE MOTOR ID
                         3, // ROTATE MOTOR ID
                         3, // ROTATE SENSOR ID
-                        (-1 * rotateMotorAngleRad + (Math.PI)), // ROTATE MOTOR TARGET ANGLE (IN RADIANS)
                         257.9); //Offset
 
         private int driveMotorId;
@@ -116,15 +113,15 @@ public class Drive {
         private int rotateSensorId;
         private double offsetDegrees; //Inverse of the reading when wheel is physically at 0 degrees
 
-        // Each item in the enum will now have to be instantiated with a constructor with the all of the ids and the motor type constants. Look few lines above, where FRONT_RIGHT_WHEEL(int driveMotorId, MotorType driveMotorType, int rotateMotorId, int rotateSensorId, double targetRadians, double targetVoltage), REAR_LEFT_WHEEL(int driveMotorId, MotorType driveMotorType, int rotateMotorId, int rotateSensorId, double targetRadians, double targetVoltage), etc... are. These are what the constructor is for.
-        private WheelProperties(int driveMotorId, int rotateMotorId, int rotateSensorId, double targetRadians, double offsetDegrees) {
+        // Each item in the enum will now have to be instantiated with a constructor with the all of the ids and the motor type constants.
+        // Look few lines above, where FRONT_RIGHT_WHEEL(int driveMotorId, int rotateMotorId, int rotateSensorId, double offset), etc... are. These are what the constructor is for.
+        private WheelProperties(int driveMotorId, int rotateMotorId, int rotateSensorId, double offsetDegrees) {
             this.driveMotorId = driveMotorId;
             this.rotateMotorId = rotateMotorId;
             this.rotateSensorId = rotateSensorId;
             this.offsetDegrees = offsetDegrees;
         }
 
-        //Ask Sanghyeok why these are private
         private int getDriveMotorId() {
             return this.driveMotorId;
         }
@@ -136,7 +133,6 @@ public class Drive {
         private int getRotateSensorId() {
             return this.rotateSensorId;
         }
-
 
         private double getOffsetDegrees(){
             return this.offsetDegrees;
@@ -225,7 +221,7 @@ public class Drive {
         } catch (RuntimeException ex) {
             System.out.println("Error Instantiating navX MXP: " + ex.getMessage());
         }
-
+    
         ahrs.reset();
     
         while (ahrs.isConnected() == false) {
@@ -306,7 +302,7 @@ public class Drive {
         swervePower = Math.sqrt((swerveX * swerveX) + (swerveY * swerveY));
         swerveAngle = Math.toDegrees(Math.atan2(swerveX, swerveY));
 
-        //If we are rotating CCW, and we are not crab driving, then the robot will flip the wheel angles and powers
+        //If we are rotating counter-clockwise, and we are not crab driving, then the robot will flip the wheel angles and powers
         //This keeps the wheels in the same position when turning both ways, making small rotations easier
         if ((rotatePower < 0) && (crabX == 0 && crabY == 0)) {
             swervePower *= -1;
@@ -328,6 +324,9 @@ public class Drive {
     ******************************************************************************************/
     public void teleopSwerve(double driveX, double driveY, double rotatePower, boolean fieldDriveEnabled) {
         PowerAndAngle coor;
+
+        System.out.println("Yaw: " + ahrs.getYaw());
+
 
         coor = calcSwerve(driveX, driveY, rotatePower, rotateRightFrontMotorAngle, fieldDriveEnabled);
         frontRightWheel.rotateAndDrive(coor.getAngle(), coor.getPower());
