@@ -2,7 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
 
-import com.revrobotics.CANEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -15,7 +15,7 @@ public class Wheel {
 
     // Motor Controllers Declaration (instantiated in the constructor in order to dependency inject the IDs of each respective controller)
     private CANSparkMax driveMotor;
-    private CANEncoder  driveEncoder;
+    private RelativeEncoder  driveEncoder;
     private VictorSP    rotateMotor;
 
     private Drive.WheelProperties name;

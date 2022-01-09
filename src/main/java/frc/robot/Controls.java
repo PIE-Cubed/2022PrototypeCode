@@ -5,8 +5,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.HIDType;
-//import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 public class Controls {
 

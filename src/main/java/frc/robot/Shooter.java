@@ -1,6 +1,6 @@
 package frc.robot;
 
-import com.revrobotics.CANEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
@@ -33,9 +33,9 @@ public class Shooter {
 	public final int REAR_SWITCH_ID  = 1;
 
 	// Encoders
-	private CANEncoder leftShooterEncoder;
-	private CANEncoder rightShooterEncoder;
-	private CANEncoder hoodMotorEncoder;
+	private RelativeEncoder leftShooterEncoder;
+	private RelativeEncoder rightShooterEncoder;
+	private RelativeEncoder hoodMotorEncoder;
 
 	//DIO SENSORS
 	private DigitalInput frontSwitch;
