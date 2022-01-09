@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 
 public class Climber {
@@ -26,6 +27,7 @@ public class Climber {
 
     // Constants
     private final int LIFTER_CURRENT_LIMIT      = 50;
+    private PneumaticsModuleType PHEONIX_PCM    = PneumaticsModuleType.CTREPCM;
     
     //Solenoid ID's
     private final int BOTTOM_MIDDLE_DEPLOY_ID   = 5;
@@ -58,8 +60,8 @@ public class Climber {
         liftMotor.set( 0.0 );
 
         //Configure pistons
-        pistonBottomMiddle = new DoubleSolenoid(BOTTOM_MIDDLE_DEPLOY_ID, BOTTOM_MIDDLE_RETRACT_ID);
-        pistonTop          = new DoubleSolenoid(TOP_DEPLOY_ID, TOP_RETRACT_ID);
+        pistonBottomMiddle = new DoubleSolenoid(PHEONIX_PCM, BOTTOM_MIDDLE_DEPLOY_ID, BOTTOM_MIDDLE_RETRACT_ID);
+        pistonTop          = new DoubleSolenoid(PHEONIX_PCM, TOP_DEPLOY_ID, TOP_RETRACT_ID);
 
         //Retract all pistons
         climberDown();

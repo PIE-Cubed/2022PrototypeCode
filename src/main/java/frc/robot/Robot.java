@@ -1,9 +1,15 @@
 package frc.robot;
 
+/**
+ * Imports
+ */
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+/**
+ * Start of class
+ */
 public class Robot extends TimedRobot {
   // ERROR CODES
   public static final int FAIL = -1;

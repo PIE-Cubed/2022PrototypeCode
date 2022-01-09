@@ -1,12 +1,17 @@
 package frc.robot;
 
+/**
+ * Imports
+ */
 import edu.wpi.first.math.MathUtil;
 
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.Hand;
 
+/**
+ * Start of class
+ */
 public class Controls {
     //Singleton Method to insure that there is ever only one instance of Controls
     private static Controls instance = null;

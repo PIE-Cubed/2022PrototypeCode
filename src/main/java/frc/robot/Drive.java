@@ -1,14 +1,20 @@
 package frc.robot;
 
+/**
+ * Imports
+ */
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.networktables.*;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.SPI;
 
+/**
+ * Start of class
+ */
 public class Drive {
     //Singleton Method to insure that there is ever only one instance of Controls
     private static Drive instance = null;

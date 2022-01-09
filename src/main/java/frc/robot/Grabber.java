@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 /**
  * Add your docs here.
@@ -28,6 +29,7 @@ public class Grabber {
 
     //CONSTANTS
     private final double GRABBER_POWER = 1.0;  //-1.0
+    private PneumaticsModuleType PHEONIX_PCM = PneumaticsModuleType.CTREPCM;
 
     /**
      * Enumerater for Grabber State
@@ -57,7 +59,7 @@ public class Grabber {
         grabberMotor.set(0.0);
 
         //Grabber Position Init
-        grabberPiston = new DoubleSolenoid(PCM_CAN_ID, DEPLOY_ID, RETRACT_ID);
+        grabberPiston = new DoubleSolenoid(PCM_CAN_ID, PHEONIX_PCM, DEPLOY_ID, RETRACT_ID);
         grabberPiston.set(Value.kReverse);
         grabberState = GrabberState.RETRACT;
     }
